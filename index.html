@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartLink | Open in App Generator</title>
-    <meta name="description" content="Generate smart links that open directly in YouTube, Instagram, and Amazon apps.">
+    <title>SmartLink Pro | Shortener + Deep Linker</title>
+    <meta name="description" content="Free URL Shortener and App Deep Linker for Creators.">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -25,13 +25,14 @@
 
         nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: var(--white); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .logo { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 24px; color: var(--primary); }
-        .logo i { margin-right: 8px; }
         .nav-link { color: var(--text); text-decoration: none; font-weight: 600; font-size: 14px; }
 
         .hero { text-align: center; padding: 60px 20px 40px; max-width: 800px; margin: 0 auto; }
         h1 { font-family: 'Poppins', sans-serif; font-size: 3rem; margin-bottom: 15px; color: #1a1a1a; }
         h1 span { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .subtitle { font-size: 1.1rem; color: var(--text-light); line-height: 1.6; margin-bottom: 40px; }
+        
+        .badge { background: #EEDEFE; color: var(--primary); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; display: inline-block; }
 
         .tool-container { background: var(--white); padding: 40px; border-radius: 24px; box-shadow: var(--shadow); max-width: 600px; margin: 0 auto 60px; text-align: left; position: relative; overflow: hidden; }
         .blob { position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: var(--accent); opacity: 0.2; border-radius: 50%; filter: blur(40px); }
@@ -43,6 +44,7 @@
 
         button.primary-btn { width: 100%; padding: 16px; background: var(--gradient); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
         button.primary-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(124, 77, 255, 0.3); }
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
 
         #result { display: none; margin-top: 20px; background: #F4F0FF; padding: 20px; border-radius: 12px; border: 1px dashed var(--primary); }
         .generated-link { font-family: monospace; color: var(--primary); word-break: break-all; margin-bottom: 15px; font-size: 14px; }
@@ -52,10 +54,6 @@
         .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto 60px; padding: 0 20px; }
         .feature-card { background: var(--white); padding: 30px; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; }
         .feature-icon { font-size: 30px; color: var(--primary); margin-bottom: 15px; }
-        .feature-card h3 { margin: 10px 0; font-size: 18px; }
-        .feature-card p { font-size: 14px; color: var(--text-light); line-height: 1.5; }
-
-        /* Cluster Icons for the 4th box */
         .icon-cluster { display: flex; gap: 10px; justify-content: center; color: var(--primary); }
         .icon-cluster i { font-size: 24px; }
 
@@ -67,8 +65,6 @@
 
         #redirector { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--white); z-index: 999; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .brand-logo { width: 80px; height: 80px; background: #eee; border-radius: 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-
-        @media (max-width: 600px) { h1 { font-size: 2rem; } }
     </style>
 </head>
 <body>
@@ -80,9 +76,10 @@
         </nav>
 
         <section class="hero">
+            <span class="badge">New: Auto-Shortener Included</span>
             <h1>Open Links directly in <br><span>Native Apps</span></h1>
             <p class="subtitle">
-                Stop losing engagement to in-app browsers. Generate smart links for YouTube, Instagram, Spotify & more.
+                Stop losing engagement to in-app browsers. We <strong>Smart Link + Shorten</strong> your URLs for YouTube, Instagram, and Amazon automatically.
             </p>
         </section>
 
@@ -92,10 +89,10 @@
                 <label>Paste your Link (YouTube, Insta, Spotify, etc.)</label>
                 <input type="text" id="inputUrl" placeholder="https://youtube.com/..." autocomplete="off">
             </div>
-            <button class="primary-btn" onclick="generateLink()">Create Smart Link <i class="fa-solid fa-wand-magic-sparkles"></i></button>
+            <button class="primary-btn" onclick="generateLink()">Shorten & Create Smart Link <i class="fa-solid fa-wand-magic-sparkles"></i></button>
 
             <div id="result">
-                <p style="font-size: 12px; font-weight: 600; color: var(--text-light); margin-bottom: 5px;">YOUR SMART URL:</p>
+                <p style="font-size: 12px; font-weight: 600; color: var(--text-light); margin-bottom: 5px;">YOUR SHORT SMART URL:</p>
                 <div class="generated-link" id="finalUrl"></div>
                 <div class="action-row">
                     <button class="copy-btn" onclick="copyLink()"><i class="fa-regular fa-copy"></i> Copy</button>
@@ -111,9 +108,9 @@
                 <p>Redirects to the App for instant Likes & Subs.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><i class="fa-brands fa-instagram"></i></div>
-                <h3>Instagram</h3>
-                <p>Opens profiles directly, bypassing login issues.</p>
+                <div class="feature-icon"><i class="fa-solid fa-link"></i></div>
+                <h3>Auto-Shortening</h3>
+                <p>No more long ugly URLs. We convert them to clean, shareable links instantly.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><i class="fa-brands fa-amazon"></i></div>
@@ -124,7 +121,6 @@
                 <div class="feature-icon icon-cluster">
                     <i class="fa-brands fa-spotify"></i>
                     <i class="fa-brands fa-twitter"></i>
-                    <i class="fa-solid fa-bag-shopping"></i>
                 </div>
                 <h3>Everything Else</h3>
                 <p>Spotify, Myntra, LinkedIn, Twitter... we support 50+ apps.</p>
@@ -190,7 +186,7 @@
         const params = new URLSearchParams(window.location.search);
         const encodedUrl = params.get('url');
 
-        // === 1. REDIRECTOR LOGIC (User Clicks Link) ===
+        // === 1. REDIRECTOR LOGIC ===
         if (encodedUrl) {
             document.getElementById('main-site').style.display = 'none';
             document.getElementById('redirector').style.display = 'flex';
@@ -212,7 +208,7 @@
                 document.getElementById('redirectTitle').innerText = `Opening ${capitalize(platformType)}...`;
             }
 
-            // Deep Linking Strategy
+            // Deep Link Strategy
             let finalLink = targetUrl;
             const userAgent = navigator.userAgent || navigator.vendor || window.opera;
             const isAndroid = /android/i.test(userAgent);
@@ -228,48 +224,37 @@
                 finalLink = `intent://${targetUrl.replace('https://', '')}#Intent;package=com.instagram.android;scheme=https;end`;
             }
 
-            // Auto-Run
             document.getElementById('deepLinkBtn').href = finalLink;
             setTimeout(() => { window.location.href = finalLink; }, 500);
-            setTimeout(() => { 
-                // Fallback: If app doesn't open, stay on this page or go to web URL
-                // window.location.href = targetUrl; 
-            }, 2500);
         }
 
-        // === 2. GENERATOR LOGIC (You Create Link) ===
+        // === 2. GENERATOR LOGIC (Auto Shortener) ===
         async function generateLink() {
             const input = document.getElementById('inputUrl').value;
             if (!input) return alert("Please paste a link first!");
 
-            // 1. Create the Long Smart Link
             const longSmartLink = `${window.location.origin}${window.location.pathname}?url=${encodeURIComponent(input)}`;
             
-            // Show Loading State
+            // Show Loading
             const btn = document.querySelector('.primary-btn');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Shortening...';
             btn.disabled = true;
 
             try {
-                // 2. Call TinyURL API (via CORS Proxy)
-                // We use corsproxy.io to bypass browser restrictions
+                // Call TinyURL
                 const apiUrl = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longSmartLink)}`;
                 const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
-                
                 const response = await fetch(proxyUrl);
                 if (!response.ok) throw new Error("Shortener failed");
-                
                 const shortLink = await response.text();
                 
-                // Success!
                 document.getElementById('finalUrl').innerText = shortLink;
             } catch (error) {
-                console.error("Shortening failed, using long link", error);
+                console.error("Shortener failed", error);
                 document.getElementById('finalUrl').innerText = longSmartLink; // Fallback
             }
 
-            // Reset UI
             document.getElementById('result').style.display = 'block';
             btn.innerHTML = originalText;
             btn.disabled = false;
@@ -286,7 +271,6 @@
             window.open(document.getElementById('finalUrl').innerText, '_blank');
         }
 
-        // Helpers
         function getYouTubeId(url) {
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             const match = url.match(regExp);
