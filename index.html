@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Link Generator</title>
+    <meta property="og:title" content="Open in App">
+    <meta property="og:description" content="Force links to open in YouTube, Instagram, or Amazon App.">
+    <style>
+        :root { --primary: #FF0000; --bg: #ffffff; --text: #333; --card: #f8f8f8; }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000000; --text: #ffffff; --card: #1c1c1e; }
+        }
+        
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; text-align: center; }
+        
+        /* Generator Styles */
+        #generator { display: none; width: 100%; max-width: 400px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { font-size: 13px; font-weight: 600; opacity: 0.7; margin-bottom: 8px; display: block; }
+        input { width: 100%; padding: 16px; border: 1px solid #ddd; background: var(--card); color: var(--text); border-radius: 16px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--primary); }
+        
+        button { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2); }
+        button:active { transform: scale(0.98); }
+
+        /* Result Box */
+        .result-box { margin-top: 25px; padding: 20px; background: var(--card); border-radius: 16px; display: none; border: 1px solid rgba(0,0,0,0.1); }
+        .link-text { word-break: break-all; font-family: monospace; font-size: 14px; margin: 15px 0; color: var(--primary); background: rgba(255,0,0,0.1); padding: 10px; border-radius: 8px; }
+
+        /* Redirect UI */
+        #redirector { display: none; width: 100%; max-width: 380px; }
+        .thumbnail-box { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 16px; overflow: hidden; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .thumbnail-box img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .loader { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="generator">
+        <h1 style="font-weight: 800; letter-spacing: -1px;">⚡️ SmartLink</h1>
+        
+        <div class="input-group">
+            <label>Paste YouTube Link</label>
+            <input type="text" id="ytInput" placeholder="https://youtu.be/..." autocomplete="off">
+        </div>
+
+        <div class="input-group">
+            <label>Button Text (Optional)</label>
+            <input type="text" id="customTextInput" placeholder="e.g. Watch Full Video 🚀">
+        </div>
+
+        <button onclick="generateLink()">Generate Link</button>
+        
+        <div id="result" class="result-box">
+            <p style="margin:0; font-size:14px; font-weight:600;">✨ Ready for Instagram:</p>
+            <p id="generatedUrl" class="link-text"></p>
+            <button onclick="copyToClipboard()" style="background:#333; padding: 12px; font-size:14px; margin-top:0;">Copy Link</button>
+        </div>
+    </div>
+
+    <div id="redirector">
+        <div class="thumbnail-box">
+            <img id="videoThumb" src="" alt="Thumbnail">
+        </div>
+
+        <h2 id="redirectTitle" style="margin-bottom: 20px; font-size: 22px;">Opening YouTube...</h2>
+        
+        <a id="manualLink" href="#" style="text-decoration: none;">
+            <button>
+                <div class="loader"></div> <span id="btnText">Open App Now</span>
+            </button>
+        </a>
+        <p style="margin-top: 15px; font-size: 13px; opacity: 0.5;">Not opening? Click the button above.</p>
+    </div>
+
+    <script>
+        // --- LOGIC START ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoId = urlParams.get('v');
+        const customText = urlParams.get('text');
+
+        if (videoId) {
+            // === REDIRECT MODE ===
+            document.getElementById('redirector').style.display = 'block';
+            
+            // 1. Fetch HQ Thumbnail from YouTube Servers
+            document.getElementById('videoThumb').src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+            // 2. Apply Custom Text
+            if (customText) {
+                document.getElementById('btnText').innerText = decodeURIComponent(customText);
+                document.getElementById('redirectTitle').innerText = "Tap to Watch 👇";
+            }
+
+            // 3. Deep Linking Logic
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            let deepLink = `https://www.youtube.com/watch?v=${videoId}`; // Default Web Fallback
+
+            // iOS Detection
+            if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                deepLink = `youtube://watch?v=${videoId}`;
+                // Fallback safe-guard
+                setTimeout(() => { window.location.href = `https://www.youtube.com/watch?v=${videoId}`; }, 2500);
+            } 
+            // Android Detection
+            else if (/android/i.test(userAgent)) {
+                deepLink = `intent://www.youtube.com/watch?v=${videoId}#Intent;package=com.google.android.youtube;scheme=https;end`;
+            }
+
+            // Execute
+            document.getElementById('manualLink').href = deepLink;
+            window.location.href = deepLink;
+
+        } else {
+            // === GENERATOR MODE ===
+            document.getElementById('generator').style.display = 'block';
+        }
+
+        function generateLink() {
+            const input = document.getElementById('ytInput').value;
+            const textInput = document.getElementById('customTextInput').value;
+            
+            // Robust YouTube ID Regex
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = input.match(regExp);
+            
+            if (match && match[2].length === 11) {
+                const vID = match[2];
+                let smartLink = `${window.location.origin}${window.location.pathname}?v=${vID}`;
+                
+                if(textInput) {
+                    smartLink += `&text=${encodeURIComponent(textInput)}`;
+                }
+                
+                document.getElementById('generatedUrl').innerText = smartLink;
+                document.getElementById('result').style.display = 'block';
+            } else {
+                alert("Please paste a valid YouTube link!");
+            }
+        }
+
+        function copyToClipboard() {
+            const urlText = document.getElementById('generatedUrl').innerText;
+            navigator.clipboard.writeText(urlText);
+            const btn = document.querySelector('#result button');
+            btn.innerText = "Copied! ✅";
+            btn.style.background = "#28a745";
+            setTimeout(() => { 
+                btn.innerText = "Copy Link"; 
+                btn.style.background = "#333";
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
