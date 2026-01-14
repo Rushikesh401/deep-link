@@ -120,10 +120,10 @@
             <div class="feature-card">
                 <div class="feature-icon icon-cluster">
                     <i class="fa-brands fa-spotify"></i>
-                    <i class="fa-brands fa-twitter"></i>
+                    <i class="fa-brands fa-instagram"></i>
                 </div>
                 <h3>Everything Else</h3>
-                <p>Spotify, Myntra, LinkedIn, Twitter... we support 50+ apps.</p>
+                <p>Spotify, Myntra, LinkedIn, Instagram... we support 50+ apps.</p>
             </div>
         </section>
 
@@ -132,9 +132,10 @@
                 <h2>Get in Touch</h2>
                 <p style="color: var(--text-light); margin-bottom: 20px;">Built by Rushikesh.</p>
                 <div class="social-links">
-                    <a href="#" class="social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
-                    <a href="#" class="social-btn"><i class="fa-brands fa-twitter"></i></a>
-                    <a href="#" class="social-btn"><i class="fa-brands fa-github"></i></a>
+                    <a href="https://instagram.com/YOUR_USERNAME" target="_blank" class="social-btn"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="https://linkedin.com/in/YOUR_USERNAME" target="_blank" class="social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="https://medium.com/@YOUR_USERNAME" target="_blank" class="social-btn"><i class="fa-brands fa-medium"></i></a>
+                    <a href="https://github.com/YOUR_USERNAME" target="_blank" class="social-btn"><i class="fa-brands fa-github"></i></a>
                 </div>
                 <p style="margin-top: 40px; font-size: 12px; opacity: 0.5;">© 2026 SmartLink Gen. All rights reserved.</p>
             </div>
@@ -153,14 +154,12 @@
         </a>
     </div>
 
-   <script>
+    <script>
         // --- CONFIGURATION ---
         const SCHEMES = {
             youtube: { 
                 check: ['youtube.com', 'youtu.be'], 
-                // iOS: Use Custom Scheme to force "Open in App" prompt
                 ios: (url, id) => id ? `youtube://watch?v=${id}` : url,
-                // Android: Intent with Fallback (Crucial!)
                 android: (url, id) => `intent://www.youtube.com/watch?v=${id}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${encodeURIComponent(url)};end`,
                 icon: '<i class="fa-brands fa-youtube" style="color:#FF0000"></i>',
                 getPacket: getYouTubeId
@@ -175,7 +174,7 @@
             spotify: { 
                 check: ['spotify.com'], 
                 ios: (url, id) => `spotify://${id.replace(/\//g, ':')}`, 
-                android: (url, id) => `intent://spotify.com/${id}#Intent;package=com.spotify.music;scheme=https;S.browser_fallback_url=${encodeURIComponent(url)};end`,
+                android: (url, id) => `intent://http://open.spotify.com/${id}#Intent;package=com.spotify.music;scheme=https;S.browser_fallback_url=${encodeURIComponent(url)};end`,
                 icon: '<i class="fa-brands fa-spotify" style="color:#1DB954"></i>',
                 getPacket: getSpotifyPacket
             },
@@ -236,21 +235,18 @@
                 }
             }
 
-            // DEBUG: Uncomment this to see what link is being generated on your phone
-            // alert("Generated Link: " + finalLink);
-
-            // 1. Set the Button HREF (This is the reliable fallback)
+            // 1. Set the Button HREF
             const deepLinkBtn = document.getElementById('deepLinkBtn');
             deepLinkBtn.href = finalLink;
 
-            // 2. Attempt "Force Click" (Bypasses some popup blockers)
+            // 2. Attempt "Force Click" 
             setTimeout(() => {
                 deepLinkBtn.click();
             }, 500);
 
-            // 3. Last Resort: Auto-Redirect (Often blocked on iOS, but good for Desktop/Android)
+            // 3. Fallback Auto-Redirect
             setTimeout(() => { 
-                window.location.replace(finalLink); // .replace() is slightly better than .href
+                window.location.replace(finalLink); 
             }, 1500);
         }
 
@@ -264,7 +260,6 @@
                 formattedInput = 'https://' + input;
             }
 
-            // Double encoding ensures TinyURL doesn't strip our params
             const smartLinkBase = `${window.location.origin}${window.location.pathname}?url=${encodeURIComponent(formattedInput)}`;
             
             const btn = document.querySelector('.primary-btn');
@@ -273,6 +268,7 @@
             btn.disabled = true;
 
             try {
+                // Call YOUR OWN Vercel API
                 const response = await fetch(`/api/shorten?url=${encodeURIComponent(smartLinkBase)}`);
                 const data = await response.json();
 
@@ -305,13 +301,13 @@
 
         // === HELPER PARSERS ===
         function getYouTubeId(url) {
-            // Improved regex to handle shorts and more formats
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             const match = url.match(regExp);
             return (match && match[2].length >= 10) ? match[2] : null;
         }
 
         function getSpotifyPacket(url) {
+            // Updated to handle both open.spotify.com/track/ID and link.tospotify.com
             const match = url.match(/open\.spotify\.com\/([a-zA-Z0-9\/]+)/);
             return match ? match[1] : null; 
         }
