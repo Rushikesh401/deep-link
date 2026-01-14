@@ -3,156 +3,290 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Link Generator</title>
-    <meta property="og:title" content="Open in App">
-    <meta property="og:description" content="Force links to open in YouTube, Instagram, or Amazon App.">
+    <title>SmartLink | Open in App Generator</title>
+    <meta name="description" content="Generate smart links that open directly in YouTube, Instagram, and Amazon apps.">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        :root { --primary: #FF0000; --bg: #ffffff; --text: #333; --card: #f8f8f8; }
-        @media (prefers-color-scheme: dark) {
-            :root { --bg: #000000; --text: #ffffff; --card: #1c1c1e; }
+        :root {
+            --primary: #7C4DFF; /* Deep Purple */
+            --accent: #B388FF;  /* Soft Lavender */
+            --bg: #F8F7FC;      /* Very Light Lavender White */
+            --white: #ffffff;
+            --text: #2D2D2D;
+            --text-light: #666666;
+            --shadow: 0 10px 30px rgba(124, 77, 255, 0.15);
+            --gradient: linear-gradient(135deg, #7C4DFF 0%, #B388FF 100%);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            background: var(--white);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .logo { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 24px; color: var(--primary); }
+        .logo i { margin-right: 8px; }
+        .nav-link { color: var(--text); text-decoration: none; font-weight: 600; font-size: 14px; }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            text-align: center;
+            padding: 60px 20px 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { font-family: 'Poppins', sans-serif; font-size: 3rem; margin-bottom: 15px; color: #1a1a1a; }
+        h1 span { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        /* --- THE GENERATOR TOOL --- */
+        .tool-container {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            max-width: 600px;
+            margin: 0 auto 60px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
         }
         
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; text-align: center; }
-        
-        /* Generator Styles */
-        #generator { display: none; width: 100%; max-width: 400px; }
-        .input-group { margin-bottom: 20px; text-align: left; }
-        label { font-size: 13px; font-weight: 600; opacity: 0.7; margin-bottom: 8px; display: block; }
-        input { width: 100%; padding: 16px; border: 1px solid #ddd; background: var(--card); color: var(--text); border-radius: 16px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.2s; }
-        input:focus { border-color: var(--primary); }
-        
-        button { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2); }
-        button:active { transform: scale(0.98); }
+        /* Decorative Lavender Blob */
+        .blob { position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: var(--accent); opacity: 0.2; border-radius: 50%; filter: blur(40px); }
 
-        /* Result Box */
-        .result-box { margin-top: 25px; padding: 20px; background: var(--card); border-radius: 16px; display: none; border: 1px solid rgba(0,0,0,0.1); }
-        .link-text { word-break: break-all; font-family: monospace; font-size: 14px; margin: 15px 0; color: var(--primary); background: rgba(255,0,0,0.1); padding: 10px; border-radius: 8px; }
+        .input-group { margin-bottom: 20px; }
+        label { font-weight: 600; font-size: 14px; margin-bottom: 8px; display: block; color: var(--text); }
+        input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: 0.3s;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        input:focus { border-color: var(--primary); outline: none; }
 
-        /* Redirect UI */
-        #redirector { display: none; width: 100%; max-width: 380px; }
-        .thumbnail-box { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 16px; overflow: hidden; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .thumbnail-box img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .loader { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        button.primary-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button.primary-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(124, 77, 255, 0.3); }
+
+        /* --- RESULT BOX --- */
+        #result { display: none; margin-top: 20px; background: #F4F0FF; padding: 20px; border-radius: 12px; border: 1px dashed var(--primary); }
+        .generated-link { font-family: monospace; color: var(--primary); word-break: break-all; margin-bottom: 15px; font-size: 14px; }
+        .action-row { display: flex; gap: 10px; }
+        .copy-btn { background: var(--white); color: var(--text); border: 1px solid #ddd; flex: 1; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
+        /* --- FEATURES GRID --- */
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto 60px; padding: 0 20px; }
+        .feature-card { background: var(--white); padding: 30px; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .feature-icon { font-size: 30px; color: var(--primary); margin-bottom: 15px; }
+        .feature-card h3 { margin: 10px 0; font-size: 18px; }
+        .feature-card p { font-size: 14px; color: var(--text-light); line-height: 1.5; }
+
+        /* --- FOOTER / GET IN TOUCH --- */
+        footer { background: var(--white); padding: 60px 20px; margin-top: auto; border-top: 1px solid #eee; }
+        .footer-content { max-width: 800px; margin: 0 auto; text-align: center; }
+        .social-links { display: flex; justify-content: center; gap: 20px; margin-top: 20px; }
+        .social-btn {
+            width: 40px; height: 40px; border-radius: 50%; background: #F4F0FF; color: var(--primary);
+            display: flex; align-items: center; justify-content: center; text-decoration: none; transition: 0.3s;
+        }
+        .social-btn:hover { background: var(--primary); color: white; transform: scale(1.1); }
+
+        /* --- REDIRECT OVERLAY (HIDDEN INITIALLY) --- */
+        #redirector {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--white); z-index: 999; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+        }
+        .brand-logo { width: 80px; height: 80px; background: #eee; border-radius: 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+
+        @media (max-width: 600px) { h1 { font-size: 2rem; } }
     </style>
 </head>
 <body>
 
-    <div id="generator">
-        <h1 style="font-weight: 800; letter-spacing: -1px;">⚡️ SmartLink</h1>
-        
-        <div class="input-group">
-            <label>Paste YouTube Link</label>
-            <input type="text" id="ytInput" placeholder="https://youtu.be/..." autocomplete="off">
-        </div>
+    <div id="main-site">
+        <nav>
+            <div class="logo"><i class="fa-solid fa-bolt"></i> SmartLink</div>
+            <a href="#contact" class="nav-link">Contact</a>
+        </nav>
 
-        <div class="input-group">
-            <label>Button Text (Optional)</label>
-            <input type="text" id="customTextInput" placeholder="e.g. Watch Full Video 🚀">
-        </div>
+        <section class="hero">
+            <h1>Open Links directly in <br><span>Native Apps</span></h1>
+            <p class="subtitle">
+                Stop losing engagement to in-app browsers. We help influencers open YouTube, Instagram, and Amazon links directly in the app. Just like <strong>OpeninApp</strong>, but free and simple.
+            </p>
+        </section>
 
-        <button onclick="generateLink()">Generate Link</button>
-        
-        <div id="result" class="result-box">
-            <p style="margin:0; font-size:14px; font-weight:600;">✨ Ready for Instagram:</p>
-            <p id="generatedUrl" class="link-text"></p>
-            <button onclick="copyToClipboard()" style="background:#333; padding: 12px; font-size:14px; margin-top:0;">Copy Link</button>
-        </div>
+        <section class="tool-container">
+            <div class="blob"></div>
+            <div class="input-group">
+                <label>Paste your Link (YouTube, Insta, Spotify, etc.)</label>
+                <input type="text" id="inputUrl" placeholder="https://youtube.com/..." autocomplete="off">
+            </div>
+            <button class="primary-btn" onclick="generateLink()">Create Smart Link <i class="fa-solid fa-wand-magic-sparkles"></i></button>
+
+            <div id="result">
+                <p style="font-size: 12px; font-weight: 600; color: var(--text-light); margin-bottom: 5px;">YOUR SMART URL:</p>
+                <div class="generated-link" id="finalUrl"></div>
+                <div class="action-row">
+                    <button class="copy-btn" onclick="copyLink()"><i class="fa-regular fa-copy"></i> Copy</button>
+                    <button class="copy-btn" onclick="testLink()" style="background: var(--primary); color: white; border: none;">Test <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-brands fa-youtube"></i></div>
+                <h3>YouTube Growth</h3>
+                <p>Redirect users directly to the YouTube app so they can Subscribe and Like instantly.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-brands fa-instagram"></i></div>
+                <h3>Instagram Profile</h3>
+                <p>Opens profiles directly in the Instagram app, bypassing the WebView login issue.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-brands fa-amazon"></i></div>
+                <h3>Amazon Affiliate</h3>
+                <p>Ensure your affiliate cookies are tracked by opening the Amazon Shopping app.</p>
+            </div>
+        </section>
+
+        <footer id="contact">
+            <div class="footer-content">
+                <h2>Get in Touch</h2>
+                <p style="color: var(--text-light); margin-bottom: 20px;">
+                    Built by Rushikesh. Need a custom iOS solution or a website like this? Let's connect.
+                </p>
+                <div class="social-links">
+                    <a href="#" class="social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="#" class="social-btn"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#" class="social-btn"><i class="fa-brands fa-github"></i></a>
+                    <a href="#" class="social-btn"><i class="fa-solid fa-envelope"></i></a>
+                </div>
+                <p style="margin-top: 40px; font-size: 12px; opacity: 0.5;">&copy; 2026 SmartLink Gen. All rights reserved.</p>
+            </div>
+        </footer>
     </div>
 
     <div id="redirector">
-        <div class="thumbnail-box">
-            <img id="videoThumb" src="" alt="Thumbnail">
+        <div class="brand-logo" id="brandIcon">⚡️</div>
+        <h2 id="redirectTitle">Opening App...</h2>
+        <p>Taking you to the best experience.</p>
+        <div style="margin-top: 20px;">
+            <i class="fa-solid fa-circle-notch fa-spin" style="color: var(--primary); font-size: 24px;"></i>
         </div>
-
-        <h2 id="redirectTitle" style="margin-bottom: 20px; font-size: 22px;">Opening YouTube...</h2>
-        
-        <a id="manualLink" href="#" style="text-decoration: none;">
-            <button>
-                <div class="loader"></div> <span id="btnText">Open App Now</span>
-            </button>
+        <a id="deepLinkBtn" href="#" style="margin-top: 30px;">
+            <button class="primary-btn" style="padding: 10px 30px;">Open Manually</button>
         </a>
-        <p style="margin-top: 15px; font-size: 13px; opacity: 0.5;">Not opening? Click the button above.</p>
     </div>
 
     <script>
         // --- LOGIC START ---
-        const urlParams = new URLSearchParams(window.location.search);
-        const videoId = urlParams.get('v');
-        const customText = urlParams.get('text');
+        const SCHEMES = {
+            youtube: { check: ['youtube.com', 'youtu.be'], ios: 'youtube://', android: 'vnd.youtube://', icon: '<i class="fa-brands fa-youtube" style="color:#FF0000"></i>' },
+            instagram: { check: ['instagram.com'], ios: 'instagram://', android: 'instagram://', icon: '<i class="fa-brands fa-instagram" style="color:#E1306C"></i>' },
+            spotify: { check: ['spotify.com'], ios: 'spotify://', android: 'spotify://', icon: '<i class="fa-brands fa-spotify" style="color:#1DB954"></i>' },
+            amazon: { check: ['amazon', 'amzn.to'], ios: 'com.amazon.mobile.shopping.web://', android: 'com.amazon.mobile.shopping.web://', icon: '<i class="fa-brands fa-amazon" style="color:#FF9900"></i>' }
+        };
 
-        if (videoId) {
-            // === REDIRECT MODE ===
-            document.getElementById('redirector').style.display = 'block';
+        const params = new URLSearchParams(window.location.search);
+        const encodedUrl = params.get('url');
+
+        // === 1. REDIRECT MODE (If ?url= exists) ===
+        if (encodedUrl) {
+            document.getElementById('main-site').style.display = 'none';
+            document.getElementById('redirector').style.display = 'flex';
             
-            // 1. Fetch HQ Thumbnail from YouTube Servers
-            document.getElementById('videoThumb').src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-
-            // 2. Apply Custom Text
-            if (customText) {
-                document.getElementById('btnText').innerText = decodeURIComponent(customText);
-                document.getElementById('redirectTitle').innerText = "Tap to Watch 👇";
-            }
-
-            // 3. Deep Linking Logic
-            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-            let deepLink = `https://www.youtube.com/watch?v=${videoId}`; // Default Web Fallback
-
-            // iOS Detection
-            if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-                deepLink = `youtube://watch?v=${videoId}`;
-                // Fallback safe-guard
-                setTimeout(() => { window.location.href = `https://www.youtube.com/watch?v=${videoId}`; }, 2500);
-            } 
-            // Android Detection
-            else if (/android/i.test(userAgent)) {
-                deepLink = `intent://www.youtube.com/watch?v=${videoId}#Intent;package=com.google.android.youtube;scheme=https;end`;
-            }
-
-            // Execute
-            document.getElementById('manualLink').href = deepLink;
-            window.location.href = deepLink;
-
-        } else {
-            // === GENERATOR MODE ===
-            document.getElementById('generator').style.display = 'block';
-        }
-
-        function generateLink() {
-            const input = document.getElementById('ytInput').value;
-            const textInput = document.getElementById('customTextInput').value;
+            const targetUrl = decodeURIComponent(encodedUrl);
+            let platformType = 'web';
             
-            // Robust YouTube ID Regex
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = input.match(regExp);
-            
-            if (match && match[2].length === 11) {
-                const vID = match[2];
-                let smartLink = `${window.location.origin}${window.location.pathname}?v=${vID}`;
-                
-                if(textInput) {
-                    smartLink += `&text=${encodeURIComponent(textInput)}`;
+            // Detect Platform
+            for (const [key, value] of Object.entries(SCHEMES)) {
+                if (value.check.some(domain => targetUrl.includes(domain))) {
+                    platformType = key;
+                    break;
                 }
-                
-                document.getElementById('generatedUrl').innerText = smartLink;
-                document.getElementById('result').style.display = 'block';
-            } else {
-                alert("Please paste a valid YouTube link!");
             }
+
+            // Update UI
+            if(SCHEMES[platformType]) {
+                document.getElementById('brandIcon').innerHTML = SCHEMES[platformType].icon;
+                document.getElementById('redirectTitle').innerText = `Opening ${capitalize(platformType)}...`;
+            }
+
+            // Deep Link Logic
+            let deepLink = targetUrl;
+            if (platformType === 'youtube') deepLink = targetUrl.replace('https://', 'youtube://').replace('http://', 'youtube://');
+            
+            // Execute
+            document.getElementById('deepLinkBtn').href = deepLink;
+            setTimeout(() => { window.location.href = deepLink; }, 1000);
+            setTimeout(() => { window.location.href = targetUrl; }, 3000); // Fallback
         }
 
-        function copyToClipboard() {
-            const urlText = document.getElementById('generatedUrl').innerText;
-            navigator.clipboard.writeText(urlText);
-            const btn = document.querySelector('#result button');
-            btn.innerText = "Copied! ✅";
-            btn.style.background = "#28a745";
-            setTimeout(() => { 
-                btn.innerText = "Copy Link"; 
-                btn.style.background = "#333";
-            }, 2000);
+        // === 2. GENERATOR MODE ===
+        function generateLink() {
+            const input = document.getElementById('inputUrl').value;
+            if (!input) return alert("Please paste a link first!");
+            
+            // Create the smart link
+            const smartLink = `${window.location.origin}${window.location.pathname}?url=${encodeURIComponent(input)}`;
+            
+            document.getElementById('finalUrl').innerText = smartLink;
+            document.getElementById('result').style.display = 'block';
         }
+
+        function copyLink() {
+            navigator.clipboard.writeText(document.getElementById('finalUrl').innerText);
+            alert("Link Copied!");
+        }
+
+        function testLink() {
+            const url = document.getElementById('finalUrl').innerText;
+            window.open(url, '_blank');
+        }
+
+        function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
     </script>
 </body>
 </html>
