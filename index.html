@@ -153,37 +153,36 @@
         </a>
     </div>
 
-    <script>
+   <script>
         // --- CONFIGURATION ---
         const SCHEMES = {
             youtube: { 
                 check: ['youtube.com', 'youtu.be'], 
-                // iOS: Custom Scheme
-                ios: (url, id) => `youtube://watch?v=${id}`,
-                // Android: Intent Scheme forcing the YouTube App package
-                android: (url, id) => `intent://www.youtube.com/watch?v=${id}#Intent;package=com.google.android.youtube;scheme=https;end`,
+                // iOS: Use Custom Scheme to force "Open in App" prompt
+                ios: (url, id) => id ? `youtube://watch?v=${id}` : url,
+                // Android: Intent with Fallback (Crucial!)
+                android: (url, id) => `intent://www.youtube.com/watch?v=${id}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${encodeURIComponent(url)};end`,
                 icon: '<i class="fa-brands fa-youtube" style="color:#FF0000"></i>',
                 getPacket: getYouTubeId
             },
             instagram: { 
                 check: ['instagram.com'], 
-                ios: (url, id) => `instagram://user?username=${id}`, // Note: this logic assumes username, simplified for example
-                android: (url, id) => `intent://${url.replace('https://', '').replace('http://', '')}#Intent;package=com.instagram.android;scheme=https;end`,
+                ios: (url, id) => `instagram://user?username=${id}`, 
+                android: (url, id) => `intent://${url.replace('https://', '').replace('http://', '')}#Intent;package=com.instagram.android;scheme=https;S.browser_fallback_url=${encodeURIComponent(url)};end`,
                 icon: '<i class="fa-brands fa-instagram" style="color:#E1306C"></i>',
-                getPacket: (url) => null // Instagram logic handles full URL usually
+                getPacket: (url) => null 
             },
             spotify: { 
                 check: ['spotify.com'], 
-                // Spotify needs specific URI structure: spotify:track:ID
                 ios: (url, id) => `spotify://${id.replace(/\//g, ':')}`, 
-                android: (url, id) => `intent://open.spotify.com/${id}#Intent;package=com.spotify.music;scheme=https;end`,
+                android: (url, id) => `intent://spotify.com/${id}#Intent;package=com.spotify.music;scheme=https;S.browser_fallback_url=${encodeURIComponent(url)};end`,
                 icon: '<i class="fa-brands fa-spotify" style="color:#1DB954"></i>',
                 getPacket: getSpotifyPacket
             },
             amazon: { 
                 check: ['amazon', 'amzn.to'], 
                 ios: (url, id) => `com.amazon.mobile.shopping.web://www.amazon.com/${id}`, 
-                android: (url, id) => `intent://www.amazon.com/${id}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;end`,
+                android: (url, id) => `intent://www.amazon.com/${id}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;S.browser_fallback_url=${encodeURIComponent(url)};end`,
                 icon: '<i class="fa-brands fa-amazon" style="color:#FF9900"></i>',
                 getPacket: getAmazonPacket
             },
@@ -227,8 +226,6 @@
             const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
 
             let finalLink = targetUrl;
-            
-            // Extract ID or Path Packet
             const packet = SCHEMES[platformType].getPacket(targetUrl);
             
             if (packet || platformType === 'instagram' || platformType === 'other') {
@@ -239,16 +236,22 @@
                 }
             }
 
-            console.log("Deep Link generated:", finalLink);
+            // DEBUG: Uncomment this to see what link is being generated on your phone
+            // alert("Generated Link: " + finalLink);
 
-            // Set the Button HREF (Crucial for iOS - User Click Trust)
-            document.getElementById('deepLinkBtn').href = finalLink;
+            // 1. Set the Button HREF (This is the reliable fallback)
+            const deepLinkBtn = document.getElementById('deepLinkBtn');
+            deepLinkBtn.href = finalLink;
 
-            // Attempt Auto-Redirect
-            // iOS often blocks this in IAB (In-App Browser), but Android accepts it via Intent
+            // 2. Attempt "Force Click" (Bypasses some popup blockers)
+            setTimeout(() => {
+                deepLinkBtn.click();
+            }, 500);
+
+            // 3. Last Resort: Auto-Redirect (Often blocked on iOS, but good for Desktop/Android)
             setTimeout(() => { 
-                window.location.href = finalLink; 
-            }, 100);
+                window.location.replace(finalLink); // .replace() is slightly better than .href
+            }, 1500);
         }
 
         // === 2. GENERATOR LOGIC ===
@@ -256,13 +259,13 @@
             const input = document.getElementById('inputUrl').value;
             if (!input) return alert("Please paste a link first!");
 
-            // Add https if missing
             let formattedInput = input;
             if (!/^https?:\/\//i.test(input)) {
                 formattedInput = 'https://' + input;
             }
 
-            const longSmartLink = `${window.location.origin}${window.location.pathname}?url=${encodeURIComponent(formattedInput)}`;
+            // Double encoding ensures TinyURL doesn't strip our params
+            const smartLinkBase = `${window.location.origin}${window.location.pathname}?url=${encodeURIComponent(formattedInput)}`;
             
             const btn = document.querySelector('.primary-btn');
             const originalText = btn.innerHTML;
@@ -270,8 +273,7 @@
             btn.disabled = true;
 
             try {
-                // Call YOUR OWN Vercel API
-                const response = await fetch(`/api/shorten?url=${encodeURIComponent(longSmartLink)}`);
+                const response = await fetch(`/api/shorten?url=${encodeURIComponent(smartLinkBase)}`);
                 const data = await response.json();
 
                 if (data.shortUrl) {
@@ -281,7 +283,7 @@
                 }
             } catch (error) {
                 console.error("Shortener failed:", error);
-                document.getElementById('finalUrl').innerText = longSmartLink; 
+                document.getElementById('finalUrl').innerText = smartLinkBase; 
                 alert("Shortener failed. Using long link.");
             }
 
@@ -302,31 +304,28 @@
         }
 
         // === HELPER PARSERS ===
-
         function getYouTubeId(url) {
+            // Improved regex to handle shorts and more formats
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
+            return (match && match[2].length >= 10) ? match[2] : null;
         }
 
         function getSpotifyPacket(url) {
-            // Extracts "track/123456" or "playlist/123456"
-            // Handles: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT
             const match = url.match(/open\.spotify\.com\/([a-zA-Z0-9\/]+)/);
             return match ? match[1] : null; 
         }
 
         function getAmazonPacket(url) {
-            // Very basic amazon extractor, often best to just pass the whole URL path or search
-            // This attempts to get the path after amazon.com/
             try {
                 const urlObj = new URL(url);
-                return urlObj.pathname.substring(1) + urlObj.search; // returns "dp/B08N5K7541?ref=..."
+                return urlObj.pathname.substring(1) + urlObj.search;
             } catch (e) {
                 return '';
             }
         }
 
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-    </script></body>
+    </script>
+</body>
 </html>
