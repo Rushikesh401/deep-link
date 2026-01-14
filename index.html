@@ -158,29 +158,22 @@
     </div>
 
     <script>
-        // --- LOGIC START ---
-        // Helper to extract YouTube ID (Crucial for iOS deep linking)
-        function getYouTubeId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
-
+        // --- CONFIGURATION ---
         const SCHEMES = {
             youtube: { 
                 check: ['youtube.com', 'youtu.be'], 
-                ios: 'youtube://watch?v=',  // Fixed Scheme
-                android: 'intent://www.youtube.com/watch?v={ID}#Intent;package=com.google.android.youtube;scheme=https;end', // Fixed Intent
+                ios: 'youtube://watch?v=', 
+                android: 'intent://www.youtube.com/watch?v={ID}#Intent;package=com.google.android.youtube;scheme=https;end', 
                 icon: '<i class="fa-brands fa-youtube" style="color:#FF0000"></i>' 
             },
             instagram: { 
                 check: ['instagram.com'], 
-                ios: 'instagram://user?username=', // Needs username logic, falling back to web if complex
+                ios: 'instagram://user?username=', 
                 android: 'intent://instagram.com/_u/{ID}#Intent;package=com.instagram.android;scheme=https;end', 
                 icon: '<i class="fa-brands fa-instagram" style="color:#E1306C"></i>' 
             },
             spotify: { 
-                check: ['spotify.com'], 
+                check: ['spotify.com', 'open.spotify.com'], 
                 ios: 'spotify://', 
                 android: 'intent://#Intent;package=com.spotify.music;scheme=spotify;end', 
                 icon: '<i class="fa-brands fa-spotify" style="color:#1DB954"></i>' 
@@ -191,25 +184,19 @@
                 android: 'com.amazon.mobile.shopping.web://', 
                 icon: '<i class="fa-brands fa-amazon" style="color:#FF9900"></i>' 
             },
-            other: {
-                check: [],
-                ios: '',
-                android: '',
-                icon: '🚀'
-            }
+            other: { check: [], ios: '', android: '', icon: '🚀' }
         };
 
         const params = new URLSearchParams(window.location.search);
         const encodedUrl = params.get('url');
 
-        // === 1. REDIRECT MODE ===
+        // === 1. REDIRECTOR LOGIC (User Clicks Link) ===
         if (encodedUrl) {
             document.getElementById('main-site').style.display = 'none';
             document.getElementById('redirector').style.display = 'flex';
             
             const targetUrl = decodeURIComponent(encodedUrl);
             let platformType = 'other';
-            let finalLink = targetUrl;
             
             // Detect Platform
             for (const [key, value] of Object.entries(SCHEMES)) {
@@ -219,13 +206,14 @@
                 }
             }
 
-            // Update UI
+            // UI Update
             if(SCHEMES[platformType]) {
                 document.getElementById('brandIcon').innerHTML = SCHEMES[platformType].icon;
                 document.getElementById('redirectTitle').innerText = `Opening ${capitalize(platformType)}...`;
             }
 
-            // --- SMART REDIRECT LOGIC ---
+            // Deep Linking Strategy
+            let finalLink = targetUrl;
             const userAgent = navigator.userAgent || navigator.vendor || window.opera;
             const isAndroid = /android/i.test(userAgent);
             const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
@@ -236,44 +224,74 @@
                     if (isAndroid) finalLink = SCHEMES.youtube.android.replace('{ID}', vidId);
                     else if (isIOS) finalLink = SCHEMES.youtube.ios + vidId;
                 }
-            } else if (platformType === 'instagram') {
-                // Basic Intent fallback for Android
-                if (isAndroid) finalLink = `intent://${targetUrl.replace('https://', '')}#Intent;package=com.instagram.android;scheme=https;end`;
-                // iOS Instagram is tricky without parsing username, usually universal link is enough if triggered by button
+            } else if (platformType === 'instagram' && isAndroid) {
+                finalLink = `intent://${targetUrl.replace('https://', '')}#Intent;package=com.instagram.android;scheme=https;end`;
             }
 
-            // Set Button
+            // Auto-Run
             document.getElementById('deepLinkBtn').href = finalLink;
-
-            // Auto Trigger (With delay for iOS to register the intent)
             setTimeout(() => { window.location.href = finalLink; }, 500);
-            
-            // Fallback
             setTimeout(() => { 
-                // If deep link fails, do nothing, let them click the button
-                // or optionally redirect to web: window.location.href = targetUrl; 
+                // Fallback: If app doesn't open, stay on this page or go to web URL
+                // window.location.href = targetUrl; 
             }, 2500);
         }
 
-        // === 2. GENERATOR MODE ===
-        function generateLink() {
+        // === 2. GENERATOR LOGIC (You Create Link) ===
+        async function generateLink() {
             const input = document.getElementById('inputUrl').value;
             if (!input) return alert("Please paste a link first!");
-            const smartLink = `${window.location.origin}${window.location.pathname}?url=${encodeURIComponent(input)}`;
-            document.getElementById('finalUrl').innerText = smartLink;
+
+            // 1. Create the Long Smart Link
+            const longSmartLink = `${window.location.origin}${window.location.pathname}?url=${encodeURIComponent(input)}`;
+            
+            // Show Loading State
+            const btn = document.querySelector('.primary-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Shortening...';
+            btn.disabled = true;
+
+            try {
+                // 2. Call TinyURL API (via CORS Proxy)
+                // We use corsproxy.io to bypass browser restrictions
+                const apiUrl = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longSmartLink)}`;
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error("Shortener failed");
+                
+                const shortLink = await response.text();
+                
+                // Success!
+                document.getElementById('finalUrl').innerText = shortLink;
+            } catch (error) {
+                console.error("Shortening failed, using long link", error);
+                document.getElementById('finalUrl').innerText = longSmartLink; // Fallback
+            }
+
+            // Reset UI
             document.getElementById('result').style.display = 'block';
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
 
         function copyLink() {
             navigator.clipboard.writeText(document.getElementById('finalUrl').innerText);
-            alert("Link Copied!");
+            const copyBtn = document.querySelector('.copy-btn');
+            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+            setTimeout(() => copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy', 2000);
         }
 
         function testLink() {
-            const url = document.getElementById('finalUrl').innerText;
-            window.open(url, '_blank');
+            window.open(document.getElementById('finalUrl').innerText, '_blank');
         }
 
+        // Helpers
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
     </script>
 </body>
