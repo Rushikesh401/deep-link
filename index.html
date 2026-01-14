@@ -244,7 +244,7 @@
             try {
                 // Call TinyURL
                 const apiUrl = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longSmartLink)}`;
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
                 const response = await fetch(proxyUrl);
                 if (!response.ok) throw new Error("Shortener failed");
                 const shortLink = await response.text();
