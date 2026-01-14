@@ -228,7 +228,7 @@
             setTimeout(() => { window.location.href = finalLink; }, 500);
         }
 
-        // === 2. GENERATOR LOGIC (Auto Shortener) ===
+        // === 2. GENERATOR LOGIC (Updated for Vercel API) ===
         async function generateLink() {
             const input = document.getElementById('inputUrl').value;
             if (!input) return alert("Please paste a link first!");
@@ -242,17 +242,20 @@
             btn.disabled = true;
 
             try {
-                // Call TinyURL
-                const apiUrl = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longSmartLink)}`;
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error("Shortener failed");
-                const shortLink = await response.text();
-                
-                document.getElementById('finalUrl').innerText = shortLink;
+                // Call YOUR OWN Vercel API
+                const response = await fetch(`/api/shorten?url=${encodeURIComponent(longSmartLink)}`);
+                const data = await response.json();
+
+                if (data.shortUrl) {
+                    document.getElementById('finalUrl').innerText = data.shortUrl;
+                } else {
+                    throw new Error("API did not return a short URL");
+                }
             } catch (error) {
-                console.error("Shortener failed", error);
-                document.getElementById('finalUrl').innerText = longSmartLink; // Fallback
+                console.error("Shortener failed:", error);
+                // Fallback: Show the long link if the server fails
+                document.getElementById('finalUrl').innerText = longSmartLink; 
+                alert("Shortener failed. Using long link.");
             }
 
             document.getElementById('result').style.display = 'block';
